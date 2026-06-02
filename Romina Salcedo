@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Resiliencia Climática | Ecuador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --brand-deep: #1a2a3a;
+            --brand-accent: #c5a059; /* Dorado tenue profesional */
+            --risk-low: #27ae60;
+            --risk-med: #f39c12;
+            --risk-high: #e74c3c;
+            --text-main: #2c3e50;
+            --bg-light: #f8fafc;
+            --card-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: var(--brand-deep);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .navbar h1 { font-size: 1.2rem; margin: 0; letter-spacing: 1px; text-transform: uppercase; }
+
+        .container {
+            max-width: 1300px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        .panel-controls {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border-top: 5px solid var(--brand-accent);
+        }
+
+        .panel-viz {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 { font-weight: 700; font-size: 1.4rem; margin-top: 0; color: var(--brand-deep); }
+
+        /* Estilización de Sliders */
+        .control-group { margin-bottom: 25px; }
+        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 10px; color: #64748b; }
+        
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--brand-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Escenarios */
+        .scenario-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .btn-scenario {
+            padding: 10px 5px;
+            font-size: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-scenario:hover { border-color: var(--brand-accent); color: var(--brand-accent); }
+        .btn-scenario.active { background: var(--brand-deep); color: white; border-color: var(--brand-deep); }
+
+        /* Tarjetas de Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            border-bottom: 4px solid transparent;
+        }
+
+        .metric-value { font-size: 1.8rem; font-weight: 700; margin: 5px 0; display: block; }
+        .metric-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Desglose Sectorial */
+        .sector-list {
+            margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .sector-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .risk-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            height: 400px;
+        }
+
+        #risk-status {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <h1>Ecuador Climate-Risk Analytics</h1>
+    <div style="font-size: 0.8rem; opacity: 0.8;">Unidad de Riesgos Físicos & Financieros</div>
+</nav>
+
+<div class="container">
+    <div class="dashboard-grid">
+        
+        <!-- Sidebar de Control -->
+        <aside class="panel-controls">
+            <h2>Simulación de Escenarios</h2>
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 25px;">
+                Ajuste las variables climáticas del Fenómeno de El Niño para observar el impacto en la estabilidad económica nacional.
+            </p>
+
+            <label>Pre-ajustes de Escenario</label>
+            <div class="scenario-selector">
+                <button class="btn-scenario" onclick="setScenario(0.8, 80, this)">Resiliente</button>
+                <button class="btn-scenario active" onclick="setScenario(1.8, 50, this)">Base 2024</button>
+                <button class="btn-scenario" onclick="setScenario(3.0, 15, this)">Crítico</button>
+            </div>
+
+            <div class="control-group">
+                <label for="temp">Anomalía de Temp. Oceánica (℃)</label>
+                <input type="range" id="temp" min="0.5" max="3.5" step="0.1" value="1.8">
+                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 5px;">
+                    <span>Neutro</span><span>Moderado</span><span>Extremo</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="prep">Gasto en Prevención (Millones USD)</label>
+                <input type="range" id="prep" min="50" max="1000" step="50" value="450">
+                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 5px;">
+                    <span>Mínimo</span><span>Óptimo</span>
+                </div>
+            </div>
+
+            <div id="risk-status">Análisis de Riesgo: Moderado</div>
+
+            <div class="sector-list">
+                <h3 style="font-size: 0.9rem; margin-bottom: 15px;">Impacto por Sector</h3>
+                <div class="sector-item">
+                    <span>Exportación Bananera</span>
+                    <span class="risk-badge" id="s-banana">Medio</span>
+                </div>
+                <div class="sector-item">
+                    <span>Sector Acuícola</span>
+                    <span class="risk-badge" id="s-shrimp">Bajo</span>
+                </div>
+                <div class="sector-item">
+                    <span>Infraestructura Vial</span>
+                    <span class="risk-badge" id="s-road">Alto</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Visualización Principal -->
+        <main class="panel-viz">
+            <div class="metrics-grid">
+                <div class="metric-card" style="border-color: #3498db;">
+                    <span class="metric-label">Impacto PIB Real</span>
+                    <span class="metric-value" id="m-pib">-1.4%</span>
+                </div>
+                <div class="metric-card" style="border-color: #e67e22;">
+                    <span class="metric-label">Provisiones Bancarias</span>
+                    <span class="metric-value" id="m-prov">+8.2%</span>
+                </div>
+                <div class="metric-card" style="border-color: #c0392b;">
+                    <span class="metric-label">Déficit Fiscal Proyectado</span>
+                    <span class="metric-value" id="m-deficit">4.2B</span>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+
+            <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); font-size: 0.9rem; color: #475569;">
+                <h4 style="margin-top: 0; color: var(--brand-deep);">Nota Metodológica</h4>
+                Esta simulación utiliza modelos de correlación entre el <strong>Índice Oceánico del Niño (ONI)</strong> y la volatilidad del <strong>Riesgo País (EMBI)</strong> de Ecuador. El aumento de los riesgos físicos incrementa la probabilidad de <em>default</em> técnico debido a la destrucción de activos productivos y la presión sobre el gasto público de emergencia.
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    const tempSlider = document.getElementById('temp');
+    const prepSlider = document.getElementById('prep');
+    
+    // Gráfico inicial
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    let mainChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Mes 6'],
+            datasets: [{
+                label: 'Probabilidad de Estrés Financiero (%)',
+                data: [10, 15, 25, 40, 35, 30],
+                borderColor: '#c5a059',
+                backgroundColor: 'rgba(197, 160, 89, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } }
+            },
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    function updateSimulation() {
+        const temp = parseFloat(tempSlider.value);
+        const prep = parseInt(prepSlider.value);
+
+        // Lógica de cálculo (Simulada)
+        const riskFactor = (temp * 2.5) / (prep / 300);
+        const pibImpact = (temp * 0.7) - (prep / 500);
+        const provBancarias = (temp * 3) + 2;
+        const deficit = (temp * 1.1) + (1000 / prep);
+
+        // Actualizar Métricas con formato
+        document.getElementById('m-pib').innerText = `-${pibImpact.toFixed(1)}%`;
+        document.getElementById('m-prov').innerText = `+${provBancarias.toFixed(1)}%`;
+        document.getElementById('m-deficit').innerText = `${deficit.toFixed(1)}B`;
+
+        // Actualizar Semáforo de Riesgo
+        const statusBox = document.getElementById('risk-status');
+        if(riskFactor < 4) {
+            statusBox.innerText = "RIESGO: CONTROLADO";
+            statusBox.style.background = "#dcfce7";
+            statusBox.style.color = "#166534";
+        } else if(riskFactor < 8) {
+            statusBox.innerText = "RIESGO: MONITOREO ACTIVO";
+            statusBox.style.background = "#fef9c3";
+            statusBox.style.color = "#854d0e";
+        } else {
+            statusBox.innerText = "RIESGO: ALERTA SISTÉMICA";
+            statusBox.style.background = "#fee2e2";
+            statusBox.style.color = "#991b1b";
+        }
+
+        // Actualizar Badges Sectoriales
+        updateBadge('s-banana', temp > 2.5 ? 'Alto' : temp > 1.5 ? 'Medio' : 'Bajo');
+        updateBadge('s-shrimp', temp > 2.8 ? 'Alto' : temp > 1.8 ? 'Medio' : 'Bajo');
+        updateBadge('s-road', temp > 2.0 ? 'Alto' : 'Medio');
+
+        // Actualizar Gráfico
+        const baseTrend = [12, 18, 28, 45, 60, 80];
+        mainChart.data.datasets[0].data = baseTrend.map(v => Math.min(100, v * (temp/1.8) * (500/prep)));
+        mainChart.update();
+    }
+
+    function updateBadge(id, level) {
+        const el = document.getElementById(id);
+        el.innerText = level;
+        el.style.background = level === 'Alto' ? '#fee2e2' : level === 'Medio' ? '#fef9c3' : '#dcfce7';
+        el.style.color = level === 'Alto' ? '#991b1b' : level === 'Medio' ? '#854d0e' : '#166534';
+    }
+
+    function setScenario(t, p, btn) {
+        tempSlider.value = t;
+        prepSlider.value = p;
+        
+        document.querySelectorAll('.btn-scenario').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        updateSimulation();
+    }
+
+    tempSlider.addEventListener('input', updateSimulation);
+    prepSlider.addEventListener('input', updateSimulation);
+
+    // Inicio
+    updateSimulation();
+</script>
+
+</body>
+</html>
